@@ -22,13 +22,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.util.StringUtils;
+
+import io.choerodon.core.convertor.ApplicationContextHelper;
 
 import org.hzero.oauth.security.config.SecurityProperties;
 
@@ -72,8 +73,7 @@ public class SavedRequestAwareAuthenticationSuccessHandler extends
 
 	private RequestCache requestCache = new HttpSessionRequestCache();
 
-	@Autowired
-	private SecurityProperties securityProperties;
+	private volatile int enableHttps = -1;
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request,
@@ -100,11 +100,21 @@ public class SavedRequestAwareAuthenticationSuccessHandler extends
 
 		// Use the DefaultSavedRequest URL
 		String targetUrl = savedRequest.getRedirectUrl();
-		if (securityProperties.getLogin().isEnableHttps() && targetUrl.startsWith("http://")) {
+		if (isEnableHttps() && targetUrl.startsWith("http://")) {
 			targetUrl = targetUrl.replaceFirst("http://", "https://");
 		}
 		logger.debug("Redirecting to DefaultSavedRequest Url: " + targetUrl);
 		getRedirectStrategy().sendRedirect(request, response, targetUrl);
+	}
+
+	private boolean isEnableHttps() {
+		if (enableHttps < 0) {
+			synchronized (this) {
+				SecurityProperties properties = ApplicationContextHelper.getContext().getBean(SecurityProperties.class);
+				enableHttps = properties.isEnableHttps() ? 1 : 0;
+			}
+		}
+		return enableHttps == 1;
 	}
 
 	public void setRequestCache(RequestCache requestCache) {

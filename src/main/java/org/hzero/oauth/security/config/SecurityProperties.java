@@ -1,9 +1,13 @@
 package org.hzero.oauth.security.config;
 
-import org.hzero.oauth.security.constant.LoginField;
+import java.util.List;
+import java.util.Set;
+
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.Set;
+import org.hzero.oauth.security.constant.LoginField;
 
 /**
  * @author bojiangzhou
@@ -86,7 +90,17 @@ public class SecurityProperties {
      */
     private String[] permitPaths = new String[]{};
 
-    public static class Login {
+    /**
+     * oauth 服务基础地址
+     */
+    private String baseUrl;
+
+    /**
+     * 端口映射
+     */
+    private List<PortMapper> portMapper = Lists.newArrayList(new PortMapper(80, 80), new PortMapper(8080, 8080));
+
+    public class Login {
         /**
          * 登录页面
          */
@@ -111,6 +125,7 @@ public class SecurityProperties {
         /**
          * #网关是否启用https
          */
+        @Deprecated
         private boolean enableHttps;
 
         /**
@@ -150,8 +165,8 @@ public class SecurityProperties {
             return page;
         }
 
-        public String getRelativePage() {
-            return page;
+        public String getAbsoluteLoginPage() {
+            return baseUrl + page;
         }
 
         public void setPage(String page) {
@@ -312,6 +327,41 @@ public class SecurityProperties {
         }
     }
 
+    public static class PortMapper {
+        /**
+         * 源端口
+         */
+        private int sourcePort;
+        /**
+         * 映射端口
+         */
+        private int mappingPort;
+
+        public PortMapper() {
+        }
+
+        public PortMapper(int sourcePort, int mappingPort) {
+            this.sourcePort = sourcePort;
+            this.mappingPort = mappingPort;
+        }
+
+        public int getSourcePort() {
+            return sourcePort;
+        }
+
+        public void setSourcePort(int sourcePort) {
+            this.sourcePort = sourcePort;
+        }
+
+        public int getMappingPort() {
+            return mappingPort;
+        }
+
+        public void setMappingPort(int mappingPort) {
+            this.mappingPort = mappingPort;
+        }
+    }
+
     public Login getLogin() {
         return login;
     }
@@ -430,5 +480,28 @@ public class SecurityProperties {
 
     public void setPermitPaths(String[] permitPaths) {
         this.permitPaths = permitPaths;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+
+    public boolean isEnableHttps() {
+        if (StringUtils.isNotBlank(baseUrl)) {
+            return baseUrl.startsWith("https://");
+        }
+        return login.isEnableHttps();
+    }
+
+    public List<PortMapper> getPortMapper() {
+        return portMapper;
+    }
+
+    public void setPortMapper(List<PortMapper> portMapper) {
+        this.portMapper = portMapper;
     }
 }

@@ -9,7 +9,7 @@
 		<version>1.4.0.RELEASE</version>
 	</parent>
 	<artifactId>hzero-oauth</artifactId>
-	<version>1.4.2.RELEASE</version>
+	<version>1.4.3.RELEASE</version>
 
 	<dependencies>
 		<dependency>

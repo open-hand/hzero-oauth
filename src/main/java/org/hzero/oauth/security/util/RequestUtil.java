@@ -10,7 +10,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import io.choerodon.core.convertor.ApplicationContextHelper;
 
-import org.hzero.core.base.BaseHeaders;
 import org.hzero.oauth.security.config.SecurityProperties;
 import org.hzero.oauth.security.constant.SecurityAttributes;
 
@@ -84,23 +83,17 @@ public class RequestUtil {
         return parameterValue;
     }
 
+    private static String baseURL;
+
     public static String getOauthRootURL(HttpServletRequest request) {
-        SecurityProperties properties = ApplicationContextHelper.getContext().getBean(SecurityProperties.class);
-        String rootPath = request.getHeader(BaseHeaders.H_ROOT_PATH);
-        if (org.springframework.util.StringUtils.isEmpty(rootPath) || "/".equals(rootPath)) {
-            rootPath = "";
-        } else if (!rootPath.startsWith("/")) {
-            rootPath = "/" + rootPath;
+        if (baseURL == null) {
+            synchronized (RequestUtil.class) {
+                SecurityProperties properties = ApplicationContextHelper.getContext().getBean(SecurityProperties.class);
+                baseURL = properties.getBaseUrl();
+            }
         }
 
-        String domain = request.getRequestURL().toString().replace(request.getRequestURI(), "");
-        if (properties.getLogin().isEnableHttps()) {
-            domain = domain.replace("http://", "https://");
-        }
-
-        domain = domain + rootPath + request.getContextPath();
-
-        return domain;
+        return baseURL;
     }
 
 }

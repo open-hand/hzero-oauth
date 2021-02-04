@@ -17,7 +17,6 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.hzero.oauth.security.config.SecurityProperties;
 import org.hzero.oauth.security.custom.processor.Processor;
 import org.hzero.oauth.security.custom.processor.login.LoginSuccessProcessor;
-import org.hzero.oauth.security.util.RequestUtil;
 
 /**
  * 登录成功处理器
@@ -40,15 +39,18 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
 
     @PostConstruct
     private void init() {
-        this.setDefaultTargetUrl(securityProperties.getLogin().getPage());
+        String authorizeUri = securityProperties.getBaseUrl() + "/oauth/authorize" +
+                "?response_type=token" +
+                "&client_id=" + securityProperties.getLogin().getDefaultClientId() +
+                "&redirect_uri=" + securityProperties.getLogin().getSuccessUrl();
+        LOGGER.info("AuthenticationSuccessHandler default target url: [{}]", authorizeUri);
+        this.setDefaultTargetUrl(authorizeUri);
         successProcessors.sort(Comparator.comparingInt(Processor::getOrder));
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        setDefaultAuthorizeUrl(request);
-
         // 处理器处理
         for (LoginSuccessProcessor processor : successProcessors) {
             try {
@@ -66,24 +68,6 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
         return securityProperties;
     }
 
-    private volatile boolean hasSet = false;
-
-    private void setDefaultAuthorizeUrl(HttpServletRequest request) {
-        if (hasSet) {
-            return;
-        }
-        synchronized (this) {
-            if (!hasSet) {
-                String authorizeUri = RequestUtil.getOauthRootURL(request) + "/oauth/authorize" +
-                        "?response_type=token" +
-                        "&client_id=" + securityProperties.getLogin().getDefaultClientId() +
-                        "&redirect_uri=" + securityProperties.getLogin().getSuccessUrl();
-                LOGGER.info("set default target url: {}", authorizeUri);
-                this.setDefaultTargetUrl(authorizeUri);
-                hasSet = true;
-            }
-        }
-    }
 }
 
 

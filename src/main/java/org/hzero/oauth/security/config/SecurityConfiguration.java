@@ -1,6 +1,8 @@
 package org.hzero.oauth.security.config;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -10,6 +12,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.PortMapper;
+import org.springframework.security.web.PortMapperImpl;
+import org.springframework.security.web.PortResolver;
+import org.springframework.security.web.PortResolverImpl;
 import org.springframework.session.SessionRepository;
 
 import org.hzero.boot.oauth.domain.repository.BaseClientRepository;
@@ -268,6 +274,23 @@ public class SecurityConfiguration {
     @ConditionalOnMissingBean(CustomSocialFailureHandler.class)
     public CustomSocialFailureHandler socialFailureHandler(SecurityProperties securityProperties) {
         return new CustomSocialFailureHandler(securityProperties);
+    }
+
+
+    @Bean
+    public PortMapper portMapper() {
+        PortMapperImpl portMapper = new PortMapperImpl();
+        Map<String, String> portMap = securityProperties.getPortMapper().stream()
+                .collect(Collectors.toMap(m -> String.valueOf(m.getSourcePort()), m -> String.valueOf(m.getSourcePort())));
+        portMapper.setPortMappings(portMap);
+        return portMapper;
+    }
+
+    @Bean
+    public PortResolver portResolver() {
+        PortResolverImpl portResolver = new PortResolverImpl();
+        portResolver.setPortMapper(portMapper());
+        return portResolver;
     }
 
 }

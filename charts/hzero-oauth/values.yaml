@@ -48,6 +48,8 @@ env:
     HZERO_OAUTH_LOGIN_PASS_REPLAY_EXPIRE: 30
     # 默认客户端
     HZERO_OAUTH_LOGIN_DEFAULT_CLIENT_ID: hzero-front-dev
+    # oauth服务基础地址
+    HZERO_OAUTH_BASE_URL: http://dev.hzero.org:8080/oauth
     # 退出时是否清理token
     HZERO_OAUTH_LOGOUT_CLEAR_TOKEN: true
     # 启用二级域名单点登录

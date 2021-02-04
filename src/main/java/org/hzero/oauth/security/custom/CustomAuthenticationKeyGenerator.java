@@ -82,6 +82,12 @@ public class CustomAuthenticationKeyGenerator implements AuthenticationKeyGenera
                         values.put(deviceIdParameter, deviceId);
                     }
                 }
+            } else {
+                Map<String, String> parameters = authorizationRequest.getRequestParameters();
+                String deviceId;
+                if (parameters != null && (deviceId = parameters.get(deviceIdParameter)) != null) {
+                    values.put(deviceIdParameter, deviceId);
+                }
             }
         }
 

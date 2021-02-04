@@ -113,9 +113,9 @@ hzero:
     enable-always-captcha: ${HZERO_OAUTH_ENABLE_ALWAYS_CAPTCHA:false}
     # client_credentials 模式是否返回 refresh_token
     credentials-allow-refresh: ${HZERO_OAUTH_CREDENTIALS_ALLOW_REFRESH:false}
+    # oauth 服务基础地址
+    base-url: ${HZERO_OAUTH_BASE_URL:http://dev.hzero.org:8080/oauth}
     login:
-      #网关是否启用https
-      enable-https: ${HZERO_OAUTH_LOGIN_ENABLE_HTTPS:false}
       # 允许使用的登录名，默认有 用户名、邮箱、手机号
       support-fields: ${HZERO_OAUTH_LOGIN_SUPPORT_FIELDS:username,email,phone}
       # 前端默认模板

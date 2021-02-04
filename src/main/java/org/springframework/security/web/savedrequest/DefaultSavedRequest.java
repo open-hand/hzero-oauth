@@ -25,10 +25,10 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.web.PortResolver;
-import org.springframework.security.web.util.UrlUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
+
+import org.hzero.oauth.security.util.RequestUtil;
 
 /**
  * Represents central information from a {@code HttpServletRequest}.
@@ -113,24 +113,21 @@ public class DefaultSavedRequest implements SavedRequest {
 		// Parameters
 		addParameters(request.getParameterMap());
 
-		String rootPath = request.getHeader("H-Root-Path");
-		if (StringUtils.isEmpty(rootPath) || "/".equals(rootPath)) {
-			rootPath = "";
-		} else if (!rootPath.startsWith("/")) {
-			rootPath = "/" + rootPath;
-		}
-
 		// Primitives
 		this.method = request.getMethod();
 		this.pathInfo = request.getPathInfo();
 		this.queryString = request.getQueryString();
-		this.requestURI = rootPath + request.getRequestURI();
+		this.requestURI = request.getRequestURI();
 		this.serverPort = portResolver.getServerPort(request);
-		this.requestURL = request.getRequestURL().toString().replace(request.getRequestURI(), this.requestURI);
+		//this.requestURL = request.getRequestURL().toString();
 		this.scheme = request.getScheme();
 		this.serverName = request.getServerName();
 		this.contextPath = request.getContextPath();
 		this.servletPath = request.getServletPath();
+
+		this.requestURL = RequestUtil.getOauthRootURL(request) + requestURI.replaceFirst(contextPath, "");
+
+		logger.debug("SavedRequest URL is: [" + requestURL + "]");
 	}
 
 	/**
@@ -290,8 +287,13 @@ public class DefaultSavedRequest implements SavedRequest {
 	 */
 	@Override
 	public String getRedirectUrl() {
-		return UrlUtils.buildFullRequestUrl(scheme, serverName, serverPort, requestURI,
-				queryString);
+		//return UrlUtils.buildFullRequestUrl(scheme, serverName, serverPort, requestURI,
+		//		queryString);
+		String redirectUrl = requestURL;
+		if (queryString != null) {
+			redirectUrl = redirectUrl + "?" + queryString;
+		}
+		return redirectUrl;
 	}
 
 	@Override

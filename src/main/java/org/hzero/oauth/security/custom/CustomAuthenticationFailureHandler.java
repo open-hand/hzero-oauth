@@ -45,7 +45,7 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
     private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     public CustomAuthenticationFailureHandler(LoginRecordService loginRecordService,
-                    SecurityProperties securityProperties, AuditLoginService auditLoginService) {
+                                              SecurityProperties securityProperties, AuditLoginService auditLoginService) {
         this.loginRecordService = loginRecordService;
         this.securityProperties = securityProperties;
         this.auditLoginService = auditLoginService;
@@ -55,7 +55,7 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                    AuthenticationException exception) throws IOException, ServletException {
+                                        AuthenticationException exception) throws IOException, ServletException {
 
         String username = request.getParameter(usernameParameter);
 
@@ -93,16 +93,16 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
 
 
         // 跳转到登录页面
-        String URL = RequestUtil.getOauthRootURL(request) + securityProperties.getLogin().getPage();
+        String URL = securityProperties.getLogin().getAbsoluteLoginPage();
         redirectStrategy.sendRedirect(request, response, URL + "?type=" + LoginType.ACCOUNT.code());
     }
 
-    protected String getExpirePage(HttpServletRequest request){
-        return RequestUtil.getOauthRootURL(request) + securityProperties.getLogin().getPassExpiredPage();
+    protected String getExpirePage(HttpServletRequest request) {
+        return securityProperties.getBaseUrl() + securityProperties.getLogin().getPassExpiredPage();
     }
 
     protected String getForceModifyPage(HttpServletRequest request) {
-        return RequestUtil.getOauthRootURL(request) + securityProperties.getLogin().getPassForceModifyPage();
+        return securityProperties.getBaseUrl() + securityProperties.getLogin().getPassForceModifyPage();
     }
 
     private String getExceptionMessage(HttpSession session, AuthenticationException exception) {
@@ -114,13 +114,13 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
         }
 
         String lang = (String) session.getAttribute(SecurityAttributes.FIELD_LANG);
-        if(StringUtils.isBlank(lang) || !lang.contains("_")){
+        if (StringUtils.isBlank(lang) || !lang.contains("_")) {
             lang = securityProperties.getDefaultLanguage();
         }
         String[] langs = lang.split("_");
-        if(langs.length>1){
-            message = MessageAccessor.getMessage(exception.getMessage(), parameters,new Locale(langs[0],langs[1])).desc();
-        }else{
+        if (langs.length > 1) {
+            message = MessageAccessor.getMessage(exception.getMessage(), parameters, new Locale(langs[0], langs[1])).desc();
+        } else {
             message = MessageAccessor.getMessage(exception.getMessage(), parameters).desc();
         }
 
