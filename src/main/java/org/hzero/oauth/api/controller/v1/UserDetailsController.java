@@ -4,12 +4,17 @@ import java.util.Collection;
 import java.util.List;
 
 import io.swagger.annotations.ApiOperation;
+import org.hzero.core.redis.RedisHelper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.session.Session;
+import org.springframework.session.SessionRepository;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +43,10 @@ public class UserDetailsController {
     private UserDetailsWrapper userDetailsWrapper;
     @Autowired
     private CustomRedisTokenStore customRedisTokenStore;
+    @Autowired
+    private SessionRepository sessionRepository;
+    @Autowired
+    private RedisHelper redisHelper;
 
     @ApiOperation("更换用户当前角色")
     @Permission(level = ResourceLevel.SITE, permissionLogin = true, permissionWithin = true)
@@ -127,6 +136,23 @@ public class UserDetailsController {
             CustomUserDetails customUserDetails = (CustomUserDetails) principal;
             resetUserDetails.resetUserDetails(customUserDetails);
             tokenStore.storeAccessToken(oAuth2AccessToken, authentication);
+
+            // 更新 session 对应的内容
+            String sessionId = redisHelper.strGet("access_token:access_to_session:" + accessToken);
+            Session session = sessionRepository.findById(sessionId);
+            if (session != null) {
+                SecurityContextImpl securityContextImpl = session.getAttribute("SPRING_SECURITY_CONTEXT");
+                Object sessionDetails = securityContextImpl.getAuthentication().getDetails();
+                Object sessionPrincipal = securityContextImpl.getAuthentication().getPrincipal();
+                if (sessionDetails instanceof CustomUserDetails) {
+                    BeanUtils.copyProperties(customUserDetails, sessionDetails);
+                }
+                if (sessionPrincipal instanceof CustomUserDetails) {
+                    BeanUtils.copyProperties(customUserDetails, sessionPrincipal);
+                }
+                session.setAttribute("SPRING_SECURITY_CONTEXT", securityContextImpl);
+                sessionRepository.save(session);
+            }
         }
         return Results.success();
     }
